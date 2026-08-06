@@ -1,0 +1,16 @@
+{
+  "name": "SG APP · Portal de accesos",
+  "short_name": "SG Portal",
+  "description": "Consulta de registros de ingreso y egreso",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#f6faf7",
+  "theme_color": "#145A32",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
