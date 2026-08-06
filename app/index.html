@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>SG APP · Accesos</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --black: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #666;
+
+    /* Verde SG — identidad de la empresa */
+    --accent: #1db954;
+    --accent-dark: #158a3e;
+    --accent-soft: rgba(29, 185, 84, 0.14);
+
+    /* Semántica de movimiento */
+    --ok: #1db954;
+    --no: #e63030;
+
+    --s2-bg: #f0faf4;
+    --s2-surface: #ffffff;
+    --s2-border: #b8e0c8;
+    --s2-text: #0f1f16;
+    --s2-muted: #4a7a5c;
+    --s2-header-bg: #1a1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow-x: hidden;
+  }
+
+  .header {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--black); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    z-index: 100;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: var(--accent); cursor: pointer; user-select: none; }
+  .session-timer { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 1px; display: none; }
+  .session-timer.warning  { color: #f59e0b; }
+  .session-timer.critical { color: var(--no); animation: pulse 1s infinite; }
+
+  .screen {
+    width: 100%; max-width: 480px; padding: 80px 24px 40px;
+    display: none; flex-direction: column; gap: 20px; min-height: 100dvh;
+  }
+  .screen.active { display: flex; }
+
+  .brand-block { text-align: center; padding: 20px 0 10px; }
+  .brand-block .title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 6px; color: var(--text); line-height: 1; }
+  .brand-block .subtitle { font-size: 11px; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; margin-top: 6px; }
+
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  .field-group { display: flex; flex-direction: column; gap: 8px; }
+  .field-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+  input[type="text"], input[type="number"], input[type="password"], textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 16px; outline: none;
+    transition: border-color 0.2s; appearance: none; -webkit-appearance: none;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  .legajo-field, .dni-field {
+    font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 5px; text-align: center;
+  }
+  .legajo-field::placeholder, .dni-field::placeholder { font-family: 'DM Sans', sans-serif; font-size: 14px; letter-spacing: 1px; opacity: 0.35; }
+
+  .hint-ok {
+    display: none; font-size: 11px; color: var(--accent-dark); background: var(--accent-soft);
+    border: 1px solid rgba(29,185,84,0.35); border-radius: 6px; padding: 7px 10px; line-height: 1.4;
+  }
+  .hint-info {
+    display: none; font-size: 11px; color: #b8860b; background: #fff8e1;
+    border: 1px solid #f0d060; border-radius: 6px; padding: 7px 10px; line-height: 1.4;
+  }
+
+  .btn {
+    width: 100%; padding: 16px; border: none; border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 1px;
+  }
+
+  /* ─── SCREEN 2 (claro, para uso diurno en puesto) ─── */
+  #screen2 { background: var(--s2-bg); color: var(--s2-text); }
+  #screen2 .field-label { color: var(--s2-muted); }
+  #screen2 input, #screen2 textarea { background: var(--s2-surface); border-color: var(--s2-border); color: var(--s2-text); }
+  #screen2 input:focus, #screen2 textarea:focus { border-color: var(--accent); }
+  #screen2 .info-bar { background: var(--s2-header-bg); border-color: #333; }
+  #screen2 .info-bar .info-bar-label { color: #888; }
+  #screen2 .info-bar .info-bar-value { color: #f0f0f0; }
+  #screen2 .btn-secondary { background: #e0e0e0; color: #333; border-color: #ccc; }
+  #screen2 .tipo-btn { border-color: var(--s2-border); background: var(--s2-surface); color: var(--s2-text); }
+
+  .tipo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tipo-btn {
+    padding: 20px 10px; border: 2px solid var(--border); border-radius: 10px;
+    background: var(--surface); color: var(--text);
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.15s; -webkit-appearance: none;
+  }
+  .tipo-btn:active { transform: scale(0.97); }
+  .tipo-btn.selected-ingreso,
+  #screen2 .tipo-btn.selected-ingreso { background: #d4f5e2; border-color: var(--ok); color: #0f5c2a; }
+  .tipo-btn.selected-egreso,
+  #screen2 .tipo-btn.selected-egreso  { background: #fde8e8; border-color: var(--no); color: #7f1d1d; }
+
+  textarea { resize: none; height: 80px; line-height: 1.5; }
+
+  .info-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .info-bar-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .info-bar-value { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(140px);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 24px; font-size: 14px; font-weight: 500;
+    z-index: 999; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show    { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--ok); color: var(--ok); }
+  .toast.error   { border-color: var(--no); color: var(--no); }
+
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(10,10,10,0.85);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; z-index: 200; backdrop-filter: blur(4px);
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { font-size: 13px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  @keyframes spin  { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  /* ─── PANEL REGISTROS ─── */
+  .registros-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+  .registros-title  { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .registros-count  { font-size: 10px; color: var(--muted); }
+  .registros-lista  {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    overflow-y: auto; max-height: 320px;
+  }
+  .registro-row { display: grid; grid-template-columns: 56px 1fr auto; border-bottom: 1px solid var(--border); }
+  .registro-row:last-child { border-bottom: none; }
+  .registro-hora {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .registro-hora.ing { background: #0d2e18; color: #2a7a44; }
+  .registro-hora.egr { background: #2a0d0d; color: #9a4040; }
+  .r-hora  { font-size: 11px; }
+  .r-fecha { font-size: 9px; opacity: 0.7; margin-top: 1px; }
+  .registro-body  { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+  .registro-id    { font-size: 12px; font-weight: 600; color: var(--text); }
+  .registro-sub   { font-size: 11px; color: var(--muted); }
+  .registro-badge { padding: 10px; display: flex; align-items: center; }
+  .badge-ing { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--ok); background: #0d2e18; padding: 3px 8px; border-radius: 20px; border: 1px solid #1a4a26; white-space: nowrap; }
+  .badge-egr { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--no); background: #2a0d0d; padding: 3px 8px; border-radius: 20px; border: 1px solid #4a1a1a; white-space: nowrap; }
+  .registros-spinner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 20px; color: var(--muted); font-size: 13px; }
+  .mini-spin { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .registros-vacio { text-align: center; padding: 20px; font-size: 13px; color: var(--muted); }
+  .registros-nota  { font-size: 10px; color: #444; text-align: center; padding: 4px 0 8px; }
+
+  /* ─── BOTTOM SHEET ─── */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+  }
+  .sheet-backdrop.show { opacity: 1; pointer-events: all; }
+  .bottom-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: #111; border-radius: 20px 20px 0 0; border-top: 1px solid var(--border);
+    z-index: 400; transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 80dvh; display: flex; flex-direction: column;
+  }
+  .bottom-sheet.show { transform: translateY(0); }
+  .sheet-handle { width: 36px; height: 4px; background: #444; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+  .sheet-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px 10px; flex-shrink: 0; border-bottom: 1px solid var(--border);
+  }
+  .sheet-title { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 1px; text-transform: uppercase; }
+  .sheet-close {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sheet-body { overflow-y: auto; flex: 1; }
+  .sheet-nota { font-size: 10px; color: #333; text-align: center; padding: 10px; flex-shrink: 0; }
+
+  .btn-ver-registros {
+    background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    white-space: nowrap; margin-top: 8px; display: block; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-ver-registros:active { background: var(--accent-soft); transform: scale(0.97); }
+
+  /* ─── PANTALLA CONFIG DISPOSITIVO ─── */
+  .config-screen {
+    position: fixed; inset: 0; background: var(--black); z-index: 600;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 32px 24px;
+  }
+  .config-screen .cfg-brand { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:6px; color: var(--accent); line-height:1; }
+  .config-screen .cfg-sub { font-size:11px; letter-spacing:3px; color: var(--muted); text-transform:uppercase; margin-bottom:8px; }
+  .config-box { width:100%; max-width:340px; display:flex; flex-direction:column; gap:12px; }
+  .cfg-error { color: var(--no); font-size:13px; text-align:center; display:none; }
+  .cfg-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:-6px; }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA CONFIG DISPOSITIVO -->
+<div class="config-screen" id="configScreen">
+  <div class="cfg-brand">SG APP</div>
+  <div class="cfg-sub">Configuración del dispositivo</div>
+
+  <div class="config-box" id="configTokenStep">
+    <input type="password" id="configToken" placeholder="Contraseña" onkeydown="if(event.key==='Enter') verificarConfigToken()">
+    <div class="cfg-error" id="configTokenError">Contraseña incorrecta</div>
+    <button class="btn btn-primary" onclick="verificarConfigToken()">CONTINUAR</button>
+  </div>
+
+  <div class="config-box" id="configFormStep" style="display:none;">
+    <div class="cfg-label">Alias del dispositivo</div>
+    <input type="text" id="configAlias" placeholder="Ej: TABLET-01">
+    <div class="cfg-label">Objetivo</div>
+    <input type="text" id="configObjetivo" placeholder="Ej: Planta Norte">
+    <div class="cfg-label">Puesto</div>
+    <input type="text" id="configPuesto" placeholder="Ej: 1">
+    <button class="btn btn-primary" onclick="guardarConfigDispositivo()" style="margin-top:8px;">GUARDAR Y ACTIVAR</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">SG APP</div>
+  <div class="session-timer" id="sessionTimer">SESIÓN: 10:00</div>
+</div>
+
+<!-- ══ SCREEN 1 — LOGIN ══ -->
+<div class="screen active" id="screen1">
+  <div class="brand-block">
+    <div class="title">ACCESOS</div>
+    <div class="subtitle">Control de ingreso y egreso</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field-group">
+    <div class="field-label">CUIL del registrador</div>
+    <input type="number" id="cuilInput" placeholder="20-12345678-9" inputmode="numeric">
+  </div>
+
+  <div style="background:#1a1a1a; border-radius:8px; padding:12px 16px; border:1px solid #2a2a2a;">
+    <div style="font-size:10px; letter-spacing:2px; color:#666; text-transform:uppercase; margin-bottom:4px;">Objetivo / Puesto</div>
+    <div id="puestoInfoLabel" style="font-size:15px; font-weight:600; color:#f0f0f0;">—</div>
+  </div>
+
+  <button class="btn btn-primary" onclick="iniciarSesion()">INGRESAR</button>
+
+  <div class="divider"></div>
+
+  <div id="outboxIndicator" style="display:none; background:#3a2e0d; border:1px solid #6b5410; color:#f0c000; font-size:12px; font-weight:600; padding:9px 12px; border-radius:8px; text-align:center;"></div>
+
+  <div id="registrosPanel" style="display:flex; flex-direction:column; gap:8px;">
+    <div class="registros-header">
+      <div class="registros-title">Últimas 24 hs</div>
+      <div class="registros-count" id="registrosCount"></div>
+    </div>
+    <div class="registros-lista" id="registrosLista">
+      <div class="registros-spinner"><div class="mini-spin"></div>Cargando registros...</div>
+    </div>
+    <div class="registros-nota">Solo lectura · No se pueden modificar</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2 — REGISTRO ══ -->
+<div class="screen" id="screen2">
+
+  <div class="info-bar">
+    <div>
+      <div class="info-bar-label">Registrador</div>
+      <div class="info-bar-value" id="cuilDisplay">—</div>
+      <div class="info-bar-label" style="margin-top:4px">Objetivo / Puesto</div>
+      <div class="info-bar-value" id="puestoDisplay">—</div>
+      <button class="btn-ver-registros" onclick="abrirSheetRegistros()">📋 Ver registros 24 hs</button>
+    </div>
+    <div style="text-align:right">
+      <div class="info-bar-label">Fecha / Hora</div>
+      <div class="info-bar-value" id="fechaDisplay">—</div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Movimiento</div>
+    <div class="tipo-selector">
+      <button type="button" class="tipo-btn" id="btnIngreso" onclick="seleccionarTipo('INGRESO')">🟢 INGRESO</button>
+      <button type="button" class="tipo-btn" id="btnEgreso"  onclick="seleccionarTipo('EGRESO')">🔴 EGRESO</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Legajo</div>
+    <input type="text" class="legajo-field" id="legajoInput" placeholder="N° de legajo" inputmode="text" autocomplete="off" oninput="onLegajoInput()">
+    <div class="hint-ok" id="legajoHintOk"></div>
+    <div class="hint-info" id="legajoHintInfo"></div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Apellido</div>
+    <input type="text" id="apellidoInput" placeholder="Ej: García" autocomplete="off">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Nombre</div>
+    <input type="text" id="nombreInput" placeholder="Ej: Juan Pablo" autocomplete="off">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">DNI</div>
+    <input type="text" class="dni-field" id="dniInput" placeholder="Sin puntos" inputmode="numeric" autocomplete="off" maxlength="8" oninput="onDniInput()">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">Observaciones</div>
+    <textarea id="obsInput" placeholder="Opcional"></textarea>
+  </div>
+
+  <div id="outboxIndicator2" style="display:none; background:#fff8e1; border:1px solid #f59e0b; color:#78350f; font-size:12px; font-weight:600; padding:9px 12px; border-radius:8px; text-align:center; margin-bottom:4px;"></div>
+
+  <button class="btn btn-primary" onclick="enviarRegistro()">ENVIAR REGISTRO</button>
+  <button class="btn btn-secondary" onclick="cerrarSesion()">Cerrar sesión</button>
+
+</div>
+
+<!-- BOTTOM SHEET REGISTROS -->
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="cerrarSheetRegistros()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">📋 Registros últimas 24 hs</div>
+    <button class="sheet-close" onclick="cerrarSheetRegistros()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="registros-lista" id="registrosListaSheet" style="max-height:none; border:none; border-radius:0; background:transparent;"></div>
+  </div>
+  <div class="sheet-nota">Solo lectura · No se pueden modificar</div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Procesando...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SG APP — v1.0.0
+// ══════════════════════════════════════════════════════════════════
+const CONFIG = {
+  // ⚠ PEGÁ ACÁ la URL /exec del backend de la app (codigo-sgapp.gs):
+  APPS_SCRIPT_URL: 'PEGAR_URL_EXEC_DEL_BACKEND_APP',
+  SECRET_TOKEN:    'sgapp_9mP4kQ7wZx2vB8nR5tL',   // = TOKEN_APP del backend
+  ADMIN_PASSWORD:  'Spartan2024',                 // abre la config del dispositivo
+  SESSION_MINUTES: 10,
+
+  LEGAJO_OBLIGATORIO:  true,
+  DNI_OBLIGATORIO:     true,
+  AUTOCOMPLETAR_LEGAJO: true,   // al tipear un legajo del padrón, completa apellido/nombre/DNI
+};
+
+const KEY_DEVICE  = 'sgapp_device';
+const KEY_SESSION = 'sgapp_session';
+const KEY_OUTBOX  = 'sgapp_outbox';
+const KEY_PADRON  = 'sgapp_padron';   // + '_' + objetivo
+
+let state = {
+  cuil: null, objetivo: null, puesto: null, alias: null,
+  configPendiente: null, configEliminada: false,
+  tipo: null,
+  sessionTimer: null, sessionSeconds: CONFIG.SESSION_MINUTES * 60,
+};
+
+let mapaLegajos = {};     // LEGAJO -> { apellido, nombre, dni }
+let ultimoLegajoAuto = ''; // último legajo que autocompletó, para no repisar ediciones manuales
+
+// ─── INIT ─────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  configurarLongPressLogo();
+  init();
+});
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const pObj = params.get('objetivo');
+  const pPst = params.get('puesto');
+
+  // 1) Parámetros en la URL → mandan (testeo desde navegador)
+  if (pObj && pPst) {
+    state.objetivo = pObj.toUpperCase();
+    state.puesto   = pPst.toUpperCase();
+    aplicarConfigYArrancar();
+    restaurarSesion();
+    return;
+  }
+
+  // 2) Config guardada en el dispositivo (modo alias)
+  const saved = cargarConfigLocal();
+  if (saved && saved.alias) {
+    state.alias    = saved.alias;
+    state.objetivo = saved.objetivo;
+    state.puesto   = saved.puesto;
+    aplicarConfigYArrancar();
+    restaurarSesion();
+    refrescarConfigDesdeBackend(saved.alias);
+    return;
+  }
+
+  // 3) Sin config → pantalla de configuración
+  mostrarConfigScreen();
+}
+
+function aplicarConfigYArrancar() {
+  document.getElementById('puestoInfoLabel').textContent =
+    `Objetivo ${state.objetivo} — Puesto ${state.puesto}`;
+  document.getElementById('configScreen').style.display = 'none';
+  cargarRegistros();
+  cargarPadronCache();     // padrón cacheado → autocompletado funciona offline
+  actualizarIndicadorOutbox();
+  flushOutbox();
+}
+
+// ─── CONFIG DEL DISPOSITIVO ───────────────────────────────────────
+function cargarConfigLocal() {
+  try { return JSON.parse(localStorage.getItem(KEY_DEVICE) || 'null'); }
+  catch { return null; }
+}
+function guardarConfigLocal(cfg) {
+  try { localStorage.setItem(KEY_DEVICE, JSON.stringify(cfg)); } catch(e) {}
+}
+
+function slugify(str) {
+  return str.trim().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+function mostrarConfigScreen() {
+  document.getElementById('configTokenStep').style.display = 'flex';
+  document.getElementById('configFormStep').style.display = 'none';
+  document.getElementById('configToken').value = '';
+  document.getElementById('configTokenError').style.display = 'none';
+  document.getElementById('configScreen').style.display = 'flex';
+}
+
+function verificarConfigToken() {
+  const val = document.getElementById('configToken').value;
+  if (val === CONFIG.ADMIN_PASSWORD) {
+    document.getElementById('configTokenStep').style.display = 'none';
+    document.getElementById('configFormStep').style.display = 'flex';
+    const saved = cargarConfigLocal();
+    if (saved) {
+      document.getElementById('configAlias').value    = saved.alias    || '';
+      document.getElementById('configObjetivo').value = saved.objetivo || '';
+      document.getElementById('configPuesto').value   = saved.puesto   || '';
+    }
+  } else {
+    document.getElementById('configTokenError').style.display = 'block';
+    document.getElementById('configToken').value = '';
+  }
+}
+
+async function guardarConfigDispositivo() {
+  const alias       = document.getElementById('configAlias').value.trim().toUpperCase();
+  const objetivoRaw = document.getElementById('configObjetivo').value.trim();
+  const puestoRaw   = document.getElementById('configPuesto').value.trim();
+  if (!alias)       { showToast('Ingresá un alias para el dispositivo', 'error'); return; }
+  if (!objetivoRaw) { showToast('Ingresá el objetivo', 'error'); return; }
+  if (!puestoRaw)   { showToast('Ingresá el puesto', 'error'); return; }
+
+  const objetivo = slugify(objetivoRaw);
+  const puesto   = slugify(puestoRaw);
+
+  showLoading('Guardando configuración...');
+  try {
+    const payload = { token: CONFIG.SECRET_TOKEN, action: 'guardarDispositivo', alias, objetivo, puesto };
+    const resp = await fetch(CONFIG.APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const data = await resp.json();
+    hideLoading();
+    if (!data.success) { showToast('Error al guardar: ' + (data.error || ''), 'error'); return; }
+
+    const c = data.config || { objetivo, puesto };
+    state.alias    = alias;
+    state.objetivo = c.objetivo;
+    state.puesto   = c.puesto;
+    guardarConfigLocal({ alias, objetivo: state.objetivo, puesto: state.puesto });
+    showToast('✅ Dispositivo configurado', 'success');
+    aplicarConfigYArrancar();
+  } catch(e) {
+    hideLoading();
+    showToast('Sin conexión — no se pudo guardar', 'error');
+  }
+}
+
+async function refrescarConfigDesdeBackend(alias) {
+  let data;
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=config&alias=${encodeURIComponent(alias)}&token=${CONFIG.SECRET_TOKEN}`;
+    const resp = await fetch(url);
+    data = await resp.json();
+  } catch(e) {
+    return;   // SIN RED → mantengo lo guardado
+  }
+
+  if (data && data.success && !data.config) {
+    if (state.cuil) state.configEliminada = true;
+    else borrarConfigYReconfigurar();
+    return;
+  }
+  if (!data || !data.success || !data.config) return;
+
+  const c = data.config;
+  const cambio = c.objetivo !== state.objetivo || c.puesto !== state.puesto;
+  guardarConfigLocal({ alias, objetivo: c.objetivo, puesto: c.puesto });
+  if (!cambio) return;
+  if (state.cuil) {
+    state.configPendiente = { alias, objetivo: c.objetivo, puesto: c.puesto };
+  } else {
+    state.objetivo = c.objetivo; state.puesto = c.puesto;
+    aplicarConfigYArrancar();
+  }
+}
+
+function borrarConfigYReconfigurar() {
+  try { localStorage.removeItem(KEY_DEVICE); } catch(e) {}
+  state.alias = null; state.objetivo = null; state.puesto = null;
+  state.configEliminada = false;
+  mostrarConfigScreen();
+}
+
+function configurarLongPressLogo() {
+  const logoEl = document.querySelector('.header .logo');
+  if (!logoEl) return;
+  let timer = null;
+  const start  = () => { timer = setTimeout(mostrarConfigScreen, 1200); };
+  const cancel = () => { clearTimeout(timer); };
+  logoEl.addEventListener('touchstart', start, { passive: true });
+  logoEl.addEventListener('touchend', cancel);
+  logoEl.addEventListener('touchmove', cancel, { passive: true });
+  logoEl.addEventListener('mousedown', start);
+  logoEl.addEventListener('mouseup', cancel);
+  logoEl.addEventListener('mouseleave', cancel);
+}
+
+// ─── REGISTROS 24 HS ──────────────────────────────────────────────
+async function cargarRegistros() {
+  const lista = document.getElementById('registrosLista');
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=registros&objetivo=${encodeURIComponent(state.objetivo)}&puesto=${encodeURIComponent(state.puesto)}&token=${CONFIG.SECRET_TOKEN}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!data.success || !data.registros || data.registros.length === 0) {
+      lista.innerHTML = `<div class="registros-vacio">Sin registros en las últimas 24 hs</div>`;
+      document.getElementById('registrosCount').textContent = '';
+      return;
+    }
+
+    const regs = data.registros;
+    document.getElementById('registrosCount').textContent =
+      `${regs.length} registro${regs.length !== 1 ? 's' : ''}`;
+
+    lista.innerHTML = regs.map(r => {
+      const esIng = r.tipo === 'INGRESO';
+      const nom   = esc(`${r.apellido || ''} ${r.nombre || ''}`.trim() || '—');
+      const partesSub = [];
+      if (r.legajo) partesSub.push('Leg. ' + esc(r.legajo));
+      if (r.dni)    partesSub.push('DNI ' + esc(r.dni));
+      const sub   = partesSub.join(' · ');
+      const fechaCorta = r.fecha ? r.fecha.slice(0,5) : '';
+      return `<div class="registro-row">
+        <div class="registro-hora ${esIng ? 'ing' : 'egr'}">
+          <span class="r-hora">${esc(r.hora)}</span>
+          <span class="r-fecha">${esc(fechaCorta)}</span>
+        </div>
+        <div class="registro-body">
+          <div class="registro-id">🚶 ${nom}</div>
+          <div class="registro-sub">${sub}</div>
+        </div>
+        <div class="registro-badge">
+          <span class="${esIng ? 'badge-ing' : 'badge-egr'}">${esc(r.tipo)}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    lista.innerHTML = `<div class="registros-vacio">No se pudieron cargar los registros</div>`;
+  }
+}
+
+// ─── PADRÓN (autocompletado por legajo) ───────────────────────────
+function claveLegajo(str) {
+  return (str || '').toString().toUpperCase().replace(/\s+/g, '').trim();
+}
+
+function keyPadron() { return KEY_PADRON + '_' + slugify(state.objetivo || 'GLOBAL'); }
+
+// Carga desde cache local (funciona offline) y refresca contra el backend.
+function cargarPadronCache() {
+  try {
+    const raw = localStorage.getItem(keyPadron());
+    if (raw) construirMapaLegajos(JSON.parse(raw));
+  } catch(e) {}
+  refrescarPadron();
+}
+
+async function refrescarPadron() {
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=padron&objetivo=${encodeURIComponent(state.objetivo)}&token=${CONFIG.SECRET_TOKEN}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (!data.success || !Array.isArray(data.padron)) return;
+    construirMapaLegajos(data.padron);
+    try { localStorage.setItem(keyPadron(), JSON.stringify(data.padron)); } catch(e) {}
+  } catch(e) { /* sin red: sigue el cacheado */ }
+}
+
+function construirMapaLegajos(arr) {
+  mapaLegajos = {};
+  (arr || []).forEach(p => {
+    const k = claveLegajo(p.legajo);
+    if (k) mapaLegajos[k] = { apellido: p.apellido || '', nombre: p.nombre || '', dni: p.dni || '' };
+  });
+}
+
+let _legajoLookupTimer = null;
+function onLegajoInput() {
+  const inp = document.getElementById('legajoInput');
+  const k = claveLegajo(inp.value);
+  const hintOk   = document.getElementById('legajoHintOk');
+  const hintInfo = document.getElementById('legajoHintInfo');
+
+  if (!CONFIG.AUTOCOMPLETAR_LEGAJO || !k) {
+    hintOk.style.display = 'none'; hintInfo.style.display = 'none'; return;
+  }
+
+  // 1) match local inmediato
+  if (mapaLegajos[k]) { aplicarPersona(k, mapaLegajos[k]); return; }
+
+  // 2) fallback online puntual (padrones más grandes que el tope de precarga)
+  hintOk.style.display = 'none';
+  hintInfo.style.display = 'none';
+  clearTimeout(_legajoLookupTimer);
+  _legajoLookupTimer = setTimeout(() => buscarLegajoOnline(k), 450);
+}
+
+async function buscarLegajoOnline(k) {
+  // solo si el legajo tipeado sigue siendo el mismo
+  if (claveLegajo(document.getElementById('legajoInput').value) !== k) return;
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=persona&legajo=${encodeURIComponent(k)}&objetivo=${encodeURIComponent(state.objetivo)}&token=${CONFIG.SECRET_TOKEN}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (claveLegajo(document.getElementById('legajoInput').value) !== k) return;
+    if (data.success && data.persona) {
+      mapaLegajos[k] = { apellido: data.persona.apellido || '', nombre: data.persona.nombre || '', dni: data.persona.dni || '' };
+      aplicarPersona(k, mapaLegajos[k]);
+    } else {
+      const hintInfo = document.getElementById('legajoHintInfo');
+      hintInfo.textContent = 'Legajo no está en el padrón — completá los datos a mano';
+      hintInfo.style.display = 'block';
+    }
+  } catch(e) { /* sin red: se completa a mano */ }
+}
+
+function aplicarPersona(legajoKey, p) {
+  const ape = document.getElementById('apellidoInput');
+  const nom = document.getElementById('nombreInput');
+  const dni = document.getElementById('dniInput');
+
+  // No repiso lo que el registrador editó a mano para OTRO legajo distinto
+  ape.value = p.apellido;
+  nom.value = p.nombre;
+  dni.value = p.dni;
+  ultimoLegajoAuto = legajoKey;
+
+  const hintOk   = document.getElementById('legajoHintOk');
+  const hintInfo = document.getElementById('legajoHintInfo');
+  hintInfo.style.display = 'none';
+  hintOk.textContent = `✓ ${p.apellido} ${p.nombre} — verificá contra el documento`;
+  hintOk.style.display = 'block';
+}
+
+function onDniInput() {
+  const inp = document.getElementById('dniInput');
+  const limpio = inp.value.replace(/\D/g, '');
+  if (inp.value !== limpio) inp.value = limpio;
+}
+
+function esc(s) {
+  return (s === null || s === undefined ? '' : s).toString()
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ─── SESIÓN ───────────────────────────────────────────────────────
+let _lastPersistSesion = 0;
+
+function iniciarSesion() {
+  const cuil = document.getElementById('cuilInput').value.trim();
+  if (!cuil) { showToast('Ingresá tu CUIL', 'error'); return; }
+  state.cuil = cuil;
+  document.getElementById('cuilDisplay').textContent = cuil;
+  document.getElementById('puestoDisplay').textContent = `Obj. ${state.objetivo} — Puesto ${state.puesto}`;
+  actualizarFecha();
+  showScreen('screen2');
+  document.getElementById('sessionTimer').style.display = 'block';
+  iniciarTimer();
+  persistSesion(true);
+  refrescarPadron();
+  flushOutbox();
+}
+
+function restaurarSesion() {
+  let s;
+  try { s = JSON.parse(localStorage.getItem(KEY_SESSION) || 'null'); } catch { s = null; }
+  if (!s || !s.cuil || !s.expiry) return;
+  const restante = Math.floor((s.expiry - Date.now()) / 1000);
+  if (restante <= 0) { limpiarSesionPersistida(); return; }
+
+  state.cuil = s.cuil;
+  state.sessionSeconds = restante;
+  document.getElementById('cuilDisplay').textContent = s.cuil;
+  document.getElementById('puestoDisplay').textContent = `Obj. ${state.objetivo} — Puesto ${state.puesto}`;
+  actualizarFecha();
+  showScreen('screen2');
+  document.getElementById('sessionTimer').style.display = 'block';
+  iniciarTimer(false);
+  flushOutbox();
+}
+
+function persistSesion(force) {
+  if (!state.cuil) return;
+  const now = Date.now();
+  if (!force && now - _lastPersistSesion < 5000) return;
+  _lastPersistSesion = now;
+  try {
+    localStorage.setItem(KEY_SESSION, JSON.stringify({ cuil: state.cuil, expiry: now + state.sessionSeconds * 1000 }));
+  } catch(e) {}
+}
+
+function limpiarSesionPersistida() {
+  try { localStorage.removeItem(KEY_SESSION); } catch(e) {}
+}
+
+function iniciarTimer(reset = true) {
+  if (reset) state.sessionSeconds = CONFIG.SESSION_MINUTES * 60;
+  clearInterval(state.sessionTimer);
+  actualizarTimerDisplay();
+  state.sessionTimer = setInterval(() => {
+    state.sessionSeconds--;
+    actualizarTimerDisplay();
+    persistSesion();
+    if (state.sessionSeconds <= 0) cerrarSesion();
+  }, 1000);
+}
+
+function resetTimer() { state.sessionSeconds = CONFIG.SESSION_MINUTES * 60; persistSesion(); }
+
+function actualizarTimerDisplay() {
+  const m = Math.floor(state.sessionSeconds / 60);
+  const s = state.sessionSeconds % 60;
+  const el = document.getElementById('sessionTimer');
+  el.textContent = `SESIÓN: ${m}:${s.toString().padStart(2,'0')}`;
+  el.className = 'session-timer';
+  if (state.sessionSeconds <= 60) el.classList.add('critical');
+  else if (state.sessionSeconds <= 180) el.classList.add('warning');
+}
+
+function cerrarSesion() {
+  clearInterval(state.sessionTimer);
+  limpiarSesionPersistida();
+  state.cuil = null;
+  document.getElementById('sessionTimer').style.display = 'none';
+  limpiarFormulario();
+  document.getElementById('cuilInput').value = '';
+  showScreen('screen1');
+
+  if (state.configEliminada) { borrarConfigYReconfigurar(); return; }
+
+  if (state.configPendiente) {
+    const c = state.configPendiente;
+    state.objetivo = c.objetivo; state.puesto = c.puesto;
+    state.configPendiente = null;
+    guardarConfigLocal({ alias: c.alias, objetivo: state.objetivo, puesto: state.puesto });
+    document.getElementById('puestoInfoLabel').textContent =
+      `Objetivo ${state.objetivo} — Puesto ${state.puesto}`;
+  }
+
+  cargarRegistros();
+  flushOutbox();
+  if (state.alias) refrescarConfigDesdeBackend(state.alias);
+}
+
+document.addEventListener('touchstart', () => { if (state.cuil) resetTimer(); });
+document.addEventListener('click',      () => { if (state.cuil) resetTimer(); });
+
+// ─── MOVIMIENTO ───────────────────────────────────────────────────
+function seleccionarTipo(tipo) {
+  state.tipo = tipo;
+  document.getElementById('btnIngreso').className = 'tipo-btn' + (tipo === 'INGRESO' ? ' selected-ingreso' : '');
+  document.getElementById('btnEgreso').className  = 'tipo-btn' + (tipo === 'EGRESO'  ? ' selected-egreso'  : '');
+}
+
+// ─── ENVÍO ────────────────────────────────────────────────────────
+async function enviarRegistro() {
+  const legajo   = claveLegajo(document.getElementById('legajoInput').value);
+  const dni      = document.getElementById('dniInput').value.replace(/\D/g, '');
+  const apellido = document.getElementById('apellidoInput').value.trim();
+  const nombre   = document.getElementById('nombreInput').value.trim();
+  const obs       = document.getElementById('obsInput').value.trim();
+
+  if (!state.tipo) { showToast('Seleccioná INGRESO o EGRESO', 'error'); return; }
+  if (CONFIG.LEGAJO_OBLIGATORIO && !legajo) { showToast('Ingresá el legajo', 'error'); return; }
+  if (!apellido) { showToast('Ingresá el apellido', 'error'); return; }
+  if (!nombre)   { showToast('Ingresá el nombre', 'error'); return; }
+  if (CONFIG.DNI_OBLIGATORIO && !/^\d{7,8}$/.test(dni)) { showToast('El DNI debe tener 7 u 8 dígitos', 'error'); return; }
+
+  const ahora = new Date();
+  const fecha = formatFecha(ahora);
+  const hora  = formatHora(ahora);
+
+  showLoading('Preparando registro...');
+
+  try {
+    let latitud = '', longitud = '';
+    try {
+      const pos = await getLocation();
+      latitud  = pos.coords.latitude.toFixed(6);
+      longitud = pos.coords.longitude.toFixed(6);
+    } catch(e) {}
+
+    const payload = {
+      token: CONFIG.SECRET_TOKEN,
+      cuil: state.cuil, fecha, hora,
+      objetivo: state.objetivo || '', puesto: state.puesto || '',
+      tipo: state.tipo,
+      legajo, apellido, nombre, dni,
+      observaciones: obs,
+      latitud, longitud,
+    };
+
+    hideLoading();
+
+    // Guardado DURABLE: primero a la bandeja de salida, después se envía.
+    if (!agregarAOutbox(payload)) {
+      showToast('⚠️ Memoria del dispositivo llena. Conectate para enviar los pendientes.', 'error');
+      return;
+    }
+    showToast('✅ Registro guardado', 'success');
+    limpiarFormulario();
+    resetTimer();
+    flushOutbox();
+
+  } catch(err) {
+    hideLoading();
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// ─── BANDEJA DE SALIDA ────────────────────────────────────────────
+let _flushing = false;
+
+function cargarOutbox() {
+  try { return JSON.parse(localStorage.getItem(KEY_OUTBOX) || '[]'); }
+  catch { return []; }
+}
+function guardarOutboxArr(arr) {
+  try { localStorage.setItem(KEY_OUTBOX, JSON.stringify(arr)); return true; }
+  catch(e) { return false; }
+}
+function agregarAOutbox(payload) {
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  payload.regId = id;                 // ID único para idempotencia
+  const arr = cargarOutbox();
+  arr.push({ id, payload });
+  const ok = guardarOutboxArr(arr);
+  actualizarIndicadorOutbox();
+  return ok;
+}
+function quitarDeOutbox(id) {
+  guardarOutboxArr(cargarOutbox().filter(it => it.id !== id));
+  actualizarIndicadorOutbox();
+}
+
+async function flushOutbox() {
+  if (_flushing) return;
+  const arr = cargarOutbox();
+  if (arr.length === 0) { actualizarIndicadorOutbox(); return; }
+  _flushing = true;
+  try {
+    for (const item of arr) {
+      let enviado = false;
+      for (let intento = 0; intento < 2 && !enviado; intento++) {
+        try {
+          const resp   = await fetch(CONFIG.APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(item.payload) });
+          const result = await resp.json();
+          if (result && result.success) enviado = true;
+        } catch(e) { /* sin red */ }
+        if (!enviado && intento === 0) await new Promise(r => setTimeout(r, 1500));
+      }
+      if (enviado) quitarDeOutbox(item.id);
+      else break;
+    }
+  } finally {
+    _flushing = false;
+    actualizarIndicadorOutbox();
+  }
+}
+
+function actualizarIndicadorOutbox() {
+  const n = cargarOutbox().length;
+  const txt = n > 0 ? `⏳ ${n} registro${n !== 1 ? 's' : ''} sin enviar — se reintenta solo` : '';
+  ['outboxIndicator', 'outboxIndicator2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = txt;
+    el.style.display = n > 0 ? 'block' : 'none';
+  });
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────
+function limpiarFormulario() {
+  document.getElementById('legajoInput').value   = '';
+  document.getElementById('dniInput').value      = '';
+  document.getElementById('apellidoInput').value = '';
+  document.getElementById('nombreInput').value   = '';
+  document.getElementById('obsInput').value      = '';
+  document.getElementById('legajoHintOk').style.display = 'none';
+  document.getElementById('legajoHintInfo').style.display = 'none';
+
+  document.getElementById('btnIngreso').className = 'tipo-btn';
+  document.getElementById('btnEgreso').className  = 'tipo-btn';
+
+  state.tipo = null;
+  ultimoLegajoAuto = '';
+}
+
+function abrirSheetRegistros() {
+  document.getElementById('registrosListaSheet').innerHTML =
+    document.getElementById('registrosLista').innerHTML;
+  document.getElementById('sheetBackdrop').classList.add('show');
+  document.getElementById('bottomSheet').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarSheetRegistros() {
+  document.getElementById('sheetBackdrop').classList.remove('show');
+  document.getElementById('bottomSheet').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function actualizarFecha() {
+  const ahora = new Date();
+  document.getElementById('fechaDisplay').textContent = `${formatFecha(ahora)} ${formatHora(ahora)}`;
+}
+
+function formatFecha(d) {
+  return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+}
+function formatHora(d) {
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+function getLocation() {
+  return new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }));
+}
+
+let toastTimeout;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 3500);
+}
+function showLoading(text = 'Procesando...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+setInterval(() => { if (state.cuil) actualizarFecha(); }, 60000);
+
+window.addEventListener('online', flushOutbox);
+setInterval(() => { if (cargarOutbox().length > 0) flushOutbox(); }, 60000);
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
